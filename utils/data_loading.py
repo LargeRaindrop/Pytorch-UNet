@@ -10,10 +10,11 @@ from torch.utils.data import Dataset
 
 
 class BasicDataset(Dataset):
-    def __init__(self, images_dir: str, masks_dir: str, scale: float = 1.0, mask_suffix: str = ''):
+    def __init__(self, images_dir: str, masks_dir: str, size, scale: float = 1.0, mask_suffix: str = ''):
         self.images_dir = Path(images_dir)
         self.masks_dir = Path(masks_dir)
         assert 0 < scale <= 1, 'Scale must be between 0 and 1'
+        self.size = size
         self.scale = scale
         self.mask_suffix = mask_suffix
 
@@ -26,19 +27,21 @@ class BasicDataset(Dataset):
         return len(self.ids)
 
     @classmethod
-    def preprocess(cls, pil_img, scale, is_mask):
-        w, h = pil_img.size
+    def preprocess(cls, pil_img, size, scale, is_mask):
+        w, h = size
         newW, newH = int(scale * w), int(scale * h)
         assert newW > 0 and newH > 0, 'Scale is too small, resized images would have no pixel'
         pil_img = pil_img.resize((newW, newH), resample=Image.NEAREST if is_mask else Image.BICUBIC)
         img_ndarray = np.asarray(pil_img)
 
-        if img_ndarray.ndim == 2 and not is_mask:
-            img_ndarray = img_ndarray[np.newaxis, ...]
-        elif not is_mask:
-            img_ndarray = img_ndarray.transpose((2, 0, 1))
+        # if img_ndarray.ndim == 2 and not is_mask:
+        #     img_ndarray = img_ndarray[np.newaxis, ...]
+        # elif not is_mask:
+        #     img_ndarray = img_ndarray.transpose((2, 0, 1))
 
         if not is_mask:
+            img_ndarray = img_ndarray.mean(axis=2, keepdims=True)
+            img_ndarray = img_ndarray.transpose((2, 0, 1))
             img_ndarray = img_ndarray / 255
 
         return img_ndarray
@@ -66,8 +69,8 @@ class BasicDataset(Dataset):
         assert img.size == mask.size, \
             'Image and mask {name} should be the same size, but are {img.size} and {mask.size}'
 
-        img = self.preprocess(img, self.scale, is_mask=False)
-        mask = self.preprocess(mask, self.scale, is_mask=True)
+        img = self.preprocess(img, self.size, self.scale, is_mask=False)
+        mask = self.preprocess(mask, self.size, self.scale, is_mask=True)
 
         return {
             'image': torch.as_tensor(img.copy()).float().contiguous(),
@@ -75,6 +78,6 @@ class BasicDataset(Dataset):
         }
 
 
-class CarvanaDataset(BasicDataset):
-    def __init__(self, images_dir, masks_dir, scale=1):
-        super().__init__(images_dir, masks_dir, scale, mask_suffix='_mask')
+class MyDataset(BasicDataset):
+    def __init__(self, images_dir, masks_dir, size, scale=1.0, mask_suffix=''):
+        super().__init__(images_dir, masks_dir, size, scale, mask_suffix=mask_suffix)
