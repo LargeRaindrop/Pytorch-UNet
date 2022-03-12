@@ -12,13 +12,16 @@ from utils.data_loading import BasicDataset
 from unet import UNet
 from utils.utils import plot_img_and_mask
 
+colormap = [0,0,0] + [255,0,0] + [0,255,0] + [0,0,255] + [255,255,255] * 252
+
+
 def predict_img(net,
                 full_img,
                 device,
                 scale_factor=1,
                 out_threshold=0.5):
     net.eval()
-    img = torch.from_numpy(BasicDataset.preprocess(full_img, scale_factor, is_mask=False))
+    img = torch.from_numpy(BasicDataset.preprocess(full_img, (args.size, args.size), scale_factor, is_mask=False))
     img = img.unsqueeze(0)
     img = img.to(device=device, dtype=torch.float32)
 
@@ -55,9 +58,10 @@ def get_args():
     parser.add_argument('--no-save', '-n', action='store_true', help='Do not save the output masks')
     parser.add_argument('--mask-threshold', '-t', type=float, default=0.5,
                         help='Minimum probability value to consider a mask pixel white')
-    parser.add_argument('--scale', '-s', type=float, default=0.5,
+    parser.add_argument('--scale', '-s', type=float, default=1.0,
                         help='Scale factor for the input images')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
+    parser.add_argument('--size', '-z', type=int, default=512, help='Length side of images')
 
     return parser.parse_args()
 
@@ -65,7 +69,7 @@ def get_args():
 def get_output_filenames(args):
     def _generate_name(fn):
         split = os.path.splitext(fn)
-        return f'{split[0]}_OUT{split[1]}'
+        return f'{split[0]}_OUT.png'
 
     return args.output or list(map(_generate_name, args.input))
 
@@ -74,7 +78,10 @@ def mask_to_image(mask: np.ndarray):
     if mask.ndim == 2:
         return Image.fromarray((mask * 255).astype(np.uint8))
     elif mask.ndim == 3:
-        return Image.fromarray((np.argmax(mask, axis=0) * 255 / mask.shape[0]).astype(np.uint8))
+        # return Image.fromarray((np.argmax(mask, axis=0) * 255 / mask.shape[0]).astype(np.uint8))
+        image = Image.fromarray((np.argmax(mask, axis=0)).astype(np.uint8))
+        image.putpalette(colormap)
+        return image
 
 
 if __name__ == '__main__':
@@ -82,7 +89,7 @@ if __name__ == '__main__':
     in_files = args.input
     out_files = get_output_filenames(args)
 
-    net = UNet(n_channels=3, n_classes=2, bilinear=args.bilinear)
+    net = UNet(n_channels=1, n_classes=4, bilinear=args.bilinear)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Loading model {args.model}')

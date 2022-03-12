@@ -35,7 +35,7 @@ def train_net(net,
     #     dataset = MyDataset(dir_img, dir_mask, img_scale)
     # except (AssertionError, RuntimeError):
     #     dataset = BasicDataset(dir_img, dir_mask, img_scale)
-    dataset = MyDataset(dir_img, dir_mask, (512, 512), img_scale)
+    dataset = MyDataset(dir_img, dir_mask, (args.size, args.size), img_scale)
 
     # 2. Split into train / validation partitions
     n_val = int(len(dataset) * val_percent)
@@ -156,6 +156,7 @@ def get_args():
                         help='Percent of the data that is used as validation (0-100)')
     parser.add_argument('--amp', action='store_true', default=False, help='Use mixed precision')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
+    parser.add_argument('--size', '-z', type=int, default=512, help='Length side of images')
 
     return parser.parse_args()
 
