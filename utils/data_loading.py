@@ -18,8 +18,8 @@ class BasicDataset(Dataset):
         self.scale = scale
         self.mask_suffix = mask_suffix
 
-        # self.ids = [splitext(file)[0] for file in listdir(images_dir) if not file.startswith('.')]
-        self.ids = [splitext(file)[0] for file in listdir(images_dir)[0:10] if not file.startswith('.')]
+        self.ids = [splitext(file)[0] for file in listdir(images_dir) if not file.startswith('.')]
+        # self.ids = [splitext(file)[0] for file in listdir(images_dir)[0:10] if not file.startswith('.')]
         if not self.ids:
             raise RuntimeError(f'No input file found in {images_dir}, make sure you put your images there')
         logging.info(f'Creating dataset with {len(self.ids)} examples')
