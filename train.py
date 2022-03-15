@@ -1,5 +1,6 @@
 import argparse
 import logging
+import math
 import sys
 from pathlib import Path
 
@@ -112,7 +113,8 @@ def train_net(net,
                 pbar.set_postfix(**{'loss (batch)': loss.item()})
 
                 # Evaluation round
-                division_step = (n_train // (10 * batch_size))
+                # division_step = (n_train // (10 * batch_size))
+                division_step = math.ceil(n_train / batch_size)
                 if division_step > 0:
                     if global_step % division_step == 0:
                         histograms = {}
