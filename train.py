@@ -31,7 +31,8 @@ def train_net(name,
               val_percent: float = 0.1,
               save_checkpoint: bool = True,
               img_scale: float = 0.5,
-              amp: bool = False):
+              amp: bool = False,
+              checkpoint_epochs=1):
     # 1. Create dataset
     # try:
     #     dataset = MyDataset(dir_img, dir_mask, img_scale)
@@ -143,7 +144,7 @@ def train_net(name,
                             **histograms
                         })
 
-        if save_checkpoint:
+        if save_checkpoint and (epoch + 1) % checkpoint_epochs == 0:
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
             # torch.save(net.state_dict(), str(dir_checkpoint / 'checkpoint_epoch{}.pth'.format(epoch + 1)))
             torch.save(net.state_dict(), str(dir_checkpoint / '{}_epoch{}.pth'.format(args.name, epoch + 1)))
@@ -164,6 +165,7 @@ def get_args():
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
     parser.add_argument('--size', '-z', type=int, default=512, help='Length side of images')
     parser.add_argument('--name', '-n', type=str, default='', help='The name of trained model')
+    parser.add_argument('--checkpoint_epochs', '-c', type=int, default=1, help='How many epochs to save as checkpoint')
 
     return parser.parse_args()
 
@@ -199,7 +201,8 @@ if __name__ == '__main__':
                   device=device,
                   img_scale=args.scale,
                   val_percent=args.val / 100,
-                  amp=args.amp)
+                  amp=args.amp,
+                  checkpoint_epochs=args.checkpoint_epochs)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
         logging.info('Saved interrupt')
