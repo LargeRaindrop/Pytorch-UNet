@@ -22,7 +22,8 @@ dir_mask = Path('./data/masks/')
 dir_checkpoint = Path('./checkpoints/')
 
 
-def train_net(net,
+def train_net(name,
+              net,
               device,
               epochs: int = 5,
               batch_size: int = 1,
@@ -56,6 +57,7 @@ def train_net(net,
                                   amp=amp))
 
     logging.info(f'''Starting training:
+        Name:            {name}
         Epochs:          {epochs}
         Batch size:      {batch_size}
         Learning rate:   {learning_rate}
@@ -143,7 +145,8 @@ def train_net(net,
 
         if save_checkpoint:
             Path(dir_checkpoint).mkdir(parents=True, exist_ok=True)
-            torch.save(net.state_dict(), str(dir_checkpoint / 'checkpoint_epoch{}.pth'.format(epoch + 1)))
+            # torch.save(net.state_dict(), str(dir_checkpoint / 'checkpoint_epoch{}.pth'.format(epoch + 1)))
+            torch.save(net.state_dict(), str(dir_checkpoint / '{}_epoch{}.pth'.format(args.name, epoch + 1)))
             logging.info(f'Checkpoint {epoch + 1} saved!')
 
 
@@ -160,6 +163,7 @@ def get_args():
     parser.add_argument('--amp', action='store_true', default=False, help='Use mixed precision')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
     parser.add_argument('--size', '-z', type=int, default=512, help='Length side of images')
+    parser.add_argument('--name', '-n', type=str, default='', help='The name of trained model')
 
     return parser.parse_args()
 
@@ -187,7 +191,8 @@ if __name__ == '__main__':
 
     net.to(device=device)
     try:
-        train_net(net=net,
+        train_net(name=args.name,
+                  net=net,
                   epochs=args.epochs,
                   batch_size=args.batch_size,
                   learning_rate=args.lr,
