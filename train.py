@@ -97,13 +97,10 @@ def train_net(name,
 
                 with torch.cuda.amp.autocast(enabled=amp):
                     masks_pred = net(images)
-                    # loss = criterion(masks_pred, true_masks) \
-                    #        + dice_loss(F.softmax(masks_pred, dim=1).float(),
-                    #                    F.one_hot(true_masks, net.n_classes).permute(0, 3, 1, 2).float(),
-                    #                    multiclass=True)
-                    loss = dice_loss(F.softmax(masks_pred, dim=1).float(),
-                                     F.one_hot(true_masks, net.n_classes).permute(0, 3, 1, 2).float(),
-                                     multiclass=True)
+                    loss = criterion(masks_pred, true_masks) \
+                           + dice_loss(F.softmax(masks_pred, dim=1).float(),
+                                       F.one_hot(true_masks, net.n_classes).permute(0, 3, 1, 2).float(),
+                                       multiclass=True)
 
                 optimizer.zero_grad(set_to_none=True)
                 grad_scaler.scale(loss).backward()
