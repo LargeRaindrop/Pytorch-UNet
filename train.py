@@ -32,7 +32,8 @@ def train_net(name,
               save_checkpoint: bool = True,
               img_scale: float = 0.5,
               amp: bool = False,
-              checkpoint_epochs=1):
+              checkpoint_epochs=1,
+              weight_decay=1e-8):
     # 1. Create dataset
     # try:
     #     dataset = MyDataset(dir_img, dir_mask, img_scale)
@@ -72,8 +73,7 @@ def train_net(name,
     ''')
 
     # 4. Set up the optimizer, the loss, the learning rate scheduler and the loss scaling for AMP
-    # optimizer = optim.RMSprop(net.parameters(), lr=learning_rate, weight_decay=1e-8, momentum=0.9)
-    optimizer = optim.RMSprop(net.parameters(), lr=learning_rate, momentum=0.9)
+    optimizer = optim.RMSprop(net.parameters(), lr=learning_rate, weight_decay=weight_decay, momentum=0.9)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2)  # goal: maximize Dice score
     grad_scaler = torch.cuda.amp.GradScaler(enabled=amp)
     criterion = nn.CrossEntropyLoss()
@@ -168,6 +168,7 @@ def get_args():
     parser.add_argument('--size', '-z', type=int, default=512, help='Length side of images')
     parser.add_argument('--name', '-n', type=str, default='', help='The name of trained model')
     parser.add_argument('--checkpoint_epochs', '-c', type=int, default=1, help='How many epochs to save as checkpoint')
+    parser.add_argument('--weight_decay', '-w', type=float, default=1e-8, help='Weight decay factor for RMSprop')
 
     return parser.parse_args()
 
@@ -204,7 +205,8 @@ if __name__ == '__main__':
                   img_scale=args.scale,
                   val_percent=args.val / 100,
                   amp=args.amp,
-                  checkpoint_epochs=args.checkpoint_epochs)
+                  checkpoint_epochs=args.checkpoint_epochs,
+                  weight_decay=args.weight_decay)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
         logging.info('Saved interrupt')
