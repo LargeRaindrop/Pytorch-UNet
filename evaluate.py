@@ -2,13 +2,13 @@ import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 
-from utils.dice_score import multiclass_dice_coeff, dice_coeff
+from utils.dice_score import multiclass_dice_coeff, dice_coeff, multiclass_dice_coeff_list
 
 
 def evaluate(net, dataloader, device):
     net.eval()
     num_val_batches = len(dataloader)
-    dice_score = 0
+    dice_score = [0.] * 3
 
     # iterate over the validation set
     for batch in tqdm(dataloader, total=num_val_batches, desc='Validation round', unit='batch', leave=False):
@@ -30,13 +30,17 @@ def evaluate(net, dataloader, device):
             else:
                 mask_pred = F.one_hot(mask_pred.argmax(dim=1), net.n_classes).permute(0, 3, 1, 2).float()
                 # compute the Dice score, ignoring background
-                dice_score += multiclass_dice_coeff(mask_pred[:, 1:, ...], mask_true[:, 1:, ...], reduce_batch_first=False)
-
-           
+                # dice_score += multiclass_dice_coeff(mask_pred[:, 1:, ...], mask_true[:, 1:, ...], reduce_batch_first=False)
+                tmp_dice_score = multiclass_dice_coeff_list(mask_pred[:, 1:, ...], mask_true[:, 1:, ...],
+                                                    reduce_batch_first=False)
+                for i in range(3):
+                    dice_score[i] += tmp_dice_score[i]
 
     net.train()
 
     # Fixes a potential division by zero error
     if num_val_batches == 0:
         return dice_score
-    return dice_score / num_val_batches
+    for i in range(3):
+        dice_score[i] /= num_val_batches
+    return dice_score

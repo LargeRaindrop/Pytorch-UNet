@@ -130,13 +130,20 @@ def train_net(name,
                             histograms['Weights/' + tag] = wandb.Histogram(value.data.cpu())
                             histograms['Gradients/' + tag] = wandb.Histogram(value.grad.data.cpu())
 
-                        val_score = evaluate(net, val_loader, device)
+                        val_score_list = evaluate(net, val_loader, device)
+                        tumor_val_score = val_score_list[0]
+                        muscle_val_score = val_score_list[1]
+                        cavity_val_score = val_score_list[2]
+                        val_score = (tumor_val_score + muscle_val_score + cavity_val_score) / 3
                         scheduler.step(val_score)
 
                         logging.info('Validation Dice score: {}'.format(val_score))
                         experiment.log({
                             'learning rate': optimizer.param_groups[0]['lr'],
                             'validation Dice': val_score,
+                            'tumor validation Dice': tumor_val_score,
+                            'muscle validation Dice': muscle_val_score,
+                            'cavity validation Dice': cavity_val_score,
                             'images': wandb.Image(images[0].cpu()),
                             'masks': {
                                 'true': wandb.Image(true_masks[0].float().cpu()),

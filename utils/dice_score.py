@@ -38,3 +38,12 @@ def dice_loss(input: Tensor, target: Tensor, multiclass: bool = False):
     assert input.size() == target.size()
     fn = multiclass_dice_coeff if multiclass else dice_coeff
     return 1 - fn(input, target, reduce_batch_first=True)
+
+
+def multiclass_dice_coeff_list(input: Tensor, target: Tensor, reduce_batch_first: bool = False, epsilon=1e-6):
+    # Dice coefficient for each class in list
+    assert input.size() == target.size()
+    dices = []
+    for channel in range(input.shape[1]):
+        dices.append(dice_coeff(input[:, channel, ...], target[:, channel, ...], reduce_batch_first, epsilon))
+    return dices
