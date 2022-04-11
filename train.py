@@ -175,7 +175,7 @@ def get_args():
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
     parser.add_argument('--size', '-z', type=int, default=512, help='Length side of images')
     parser.add_argument('--name', '-n', type=str, default='', help='The name of trained model')
-    parser.add_argument('--checkpoint_epochs', '-c', type=int, default=1, help='How many epochs to save as checkpoint')
+    parser.add_argument('--checkpoint_epochs', '-c', type=int, default=10, help='How many epochs to save as checkpoint')
     parser.add_argument('--weight_decay', '-w', type=float, default=1e-8, help='Weight decay factor for RMSprop')
 
     return parser.parse_args()
