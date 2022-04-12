@@ -138,7 +138,7 @@ def train_net(name,
                         scheduler.step(val_score)
 
                         logging.info('Validation Dice score: {}'.format(val_score))
-                        logging.info('Val Dice score for each class: {}'.format(val_score_list))
+                        logging.info('Each class: {}'.format(val_score_list))
                         experiment.log({
                             'learning rate': optimizer.param_groups[0]['lr'],
                             'validation Dice': val_score,
