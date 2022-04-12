@@ -1,6 +1,7 @@
 import argparse
 import logging
 import math
+import os
 import sys
 from pathlib import Path
 
@@ -17,8 +18,10 @@ from utils.dice_score import dice_loss
 from evaluate import evaluate
 from unet import UNet
 
-dir_img = Path('./data/imgs/')
-dir_mask = Path('./data/masks/')
+# dir_img = Path('./data/imgs/')
+# dir_mask = Path('./data/masks/')
+dir_train = Path('./data/train/')
+dir_test = Path('./data/test/')
 dir_checkpoint = Path('./checkpoints/')
 
 
@@ -39,16 +42,27 @@ def train_net(name,
     #     dataset = MyDataset(dir_img, dir_mask, img_scale)
     # except (AssertionError, RuntimeError):
     #     dataset = BasicDataset(dir_img, dir_mask, img_scale)
-    dataset = MyDataset(dir_img, dir_mask, (args.size, args.size), img_scale)
+    # dataset = MyDataset(dir_img, dir_mask, (args.size, args.size), img_scale)
 
     # 2. Split into train / validation partitions
-    n_val = int(len(dataset) * val_percent)
-    n_train = len(dataset) - n_val
-    train_set, val_set = random_split(dataset, [n_train, n_val], generator=torch.Generator().manual_seed(0))
+    # n_val = int(len(dataset) * val_percent)
+    # n_train = len(dataset) - n_val
+    # train_set, val_set = random_split(dataset, [n_train, n_val], generator=torch.Generator().manual_seed(0))
+
+    train_set = MyDataset(os.path.join(dir_train, 'imgs'),
+                          os.path.join(dir_train, 'masks'),
+                          (args.size, args.size),
+                          img_scale)
+    val_set = MyDataset(os.path.join(dir_test, 'imgs'),
+                        os.path.join(dir_test, 'masks'),
+                        (args.size, args.size),
+                        img_scale)
+    n_train = len(train_set)
+    n_val = len(val_set)
 
     # 3. Create data loaders
     loader_args = dict(batch_size=batch_size, num_workers=4, pin_memory=True)
-    train_loader = DataLoader(train_set, shuffle=False, **loader_args)
+    train_loader = DataLoader(train_set, shuffle=True, generator=torch.Generator().manual_seed(0), **loader_args)
     # val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
     val_loader = DataLoader(val_set, shuffle=False, **loader_args)
 
