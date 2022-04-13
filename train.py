@@ -20,6 +20,7 @@ from unet import UNet
 
 # dir_img = Path('./data/imgs/')
 # dir_mask = Path('./data/masks/')
+dir_origin_train = Path('./data/origin-train/')
 dir_train = Path('./data/train/')
 dir_test = Path('./data/test/')
 dir_checkpoint = Path('./checkpoints/')
@@ -36,7 +37,8 @@ def train_net(name,
               img_scale: float = 0.5,
               amp: bool = False,
               checkpoint_epochs=1,
-              weight_decay=1e-8):
+              weight_decay=1e-8,
+              data_aug=False):
     # 1. Create dataset
     # try:
     #     dataset = MyDataset(dir_img, dir_mask, img_scale)
@@ -49,7 +51,7 @@ def train_net(name,
     # n_train = len(dataset) - n_val
     # train_set, val_set = random_split(dataset, [n_train, n_val], generator=torch.Generator().manual_seed(0))
 
-    train_set = MyDataset(os.path.join(dir_train, 'imgs'),
+    train_set = MyDataset(os.path.join(dir_train if data_aug else dir_origin_train, 'imgs'),
                           os.path.join(dir_train, 'masks'),
                           (args.size, args.size),
                           img_scale)
@@ -191,7 +193,8 @@ def get_args():
     parser.add_argument('--size', '-z', type=int, default=512, help='Length side of images')
     parser.add_argument('--name', '-n', type=str, default='', help='The name of trained model')
     parser.add_argument('--checkpoint_epochs', '-c', type=int, default=10, help='How many epochs to save as checkpoint')
-    parser.add_argument('--weight_decay', '-w', type=float, default=1e-8, help='Weight decay factor for RMSprop')
+    parser.add_argument('--weight_decay', '-w', type=float, default=1e-8, help='Weight decay factor')
+    parser.add_argument('--data_augmentation', '-da', action='store_true', default=False, help='Use data augmentation')
 
     return parser.parse_args()
 
@@ -229,7 +232,8 @@ if __name__ == '__main__':
                   val_percent=args.val / 100,
                   amp=args.amp,
                   checkpoint_epochs=args.checkpoint_epochs,
-                  weight_decay=args.weight_decay)
+                  weight_decay=args.weight_decay,
+                  data_aug=args.data_augmentation)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
         logging.info('Saved interrupt')
