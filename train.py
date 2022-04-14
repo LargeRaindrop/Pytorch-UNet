@@ -38,7 +38,8 @@ def train_net(name,
               amp: bool = False,
               checkpoint_epochs=1,
               weight_decay=1e-8,
-              data_aug=False):
+              data_aug=False,
+              loss_func='sum'):
     # 1. Create dataset
     # try:
     #     dataset = MyDataset(dir_img, dir_mask, img_scale)
@@ -115,10 +116,19 @@ def train_net(name,
 
                 with torch.cuda.amp.autocast(enabled=amp):
                     masks_pred = net(images)
-                    loss = criterion(masks_pred, true_masks) \
-                           + dice_loss(F.softmax(masks_pred, dim=1).float(),
-                                       F.one_hot(true_masks, net.n_classes).permute(0, 3, 1, 2).float(),
-                                       multiclass=True)
+                    if loss_func == 'sum':
+                        loss = criterion(masks_pred, true_masks) \
+                               + dice_loss(F.softmax(masks_pred, dim=1).float(),
+                                           F.one_hot(true_masks, net.n_classes).permute(0, 3, 1, 2).float(),
+                                           multiclass=True)
+                    elif loss_func == 'ce':
+                        loss = criterion(masks_pred, true_masks)
+                    elif loss_func == 'dice':
+                        loss = dice_loss(F.softmax(masks_pred, dim=1).float(),
+                                         F.one_hot(true_masks, net.n_classes).permute(0, 3, 1, 2).float(),
+                                         multiclass=True)
+                    else:
+                        raise Exception("Loss function can't be recognized.")
 
                 optimizer.zero_grad(set_to_none=True)
                 grad_scaler.scale(loss).backward()
@@ -194,7 +204,9 @@ def get_args():
     parser.add_argument('--name', '-n', type=str, default='', help='The name of trained model')
     parser.add_argument('--checkpoint_epochs', '-c', type=int, default=10, help='How many epochs to save as checkpoint')
     parser.add_argument('--weight_decay', '-w', type=float, default=1e-8, help='Weight decay factor')
-    parser.add_argument('--data_augmentation', '-da', action='store_true', default=False, help='Use data augmentation')
+    parser.add_argument('--data_aug', '-da', action='store_true', default=False, help='Use data augmentation')
+    parser.add_argument('--loss_func', '-lf', type=str, default='sum',
+                        help='Loss function: "ce" for cross entropy, "dice" for DSC, "sum" for sum')
 
     return parser.parse_args()
 
@@ -233,7 +245,8 @@ if __name__ == '__main__':
                   amp=args.amp,
                   checkpoint_epochs=args.checkpoint_epochs,
                   weight_decay=args.weight_decay,
-                  data_aug=args.data_augmentation)
+                  data_aug=args.data_aug,
+                  loss_func=args.loss_func)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
         logging.info('Saved interrupt')
