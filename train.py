@@ -77,17 +77,19 @@ def train_net(name,
                                   amp=amp))
 
     logging.info(f'''Starting training:
-        Name:            {name}
-        Epochs:          {epochs}
-        Batch size:      {batch_size}
-        Learning rate:   {learning_rate}
-        Training size:   {n_train}
-        Validation size: {n_val}
-        Checkpoints:     {save_checkpoint}
-        Device:          {device.type}
-        Images scaling:  {img_scale}
-        Mixed Precision: {amp}
-        Weight decay:    {weight_decay}
+        Name:               {name}
+        Epochs:             {epochs}
+        Batch size:         {batch_size}
+        Learning rate:      {learning_rate}
+        Training size:      {n_train}
+        Validation size:    {n_val}
+        Checkpoints:        {save_checkpoint}
+        Device:             {device.type}
+        Images scaling:     {img_scale}
+        Mixed Precision:    {amp}
+        Weight decay:       {weight_decay}
+        Data augmentation:  {data_aug}
+        Loss function:      {loss_func}
     ''')
 
     # 4. Set up the optimizer, the loss, the learning rate scheduler and the loss scaling for AMP
