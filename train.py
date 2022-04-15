@@ -134,6 +134,7 @@ def train_net(name,
 
                 optimizer.zero_grad(set_to_none=True)
                 grad_scaler.scale(loss).backward()
+                nn.utils.clip_grad_norm_(net.parameters(), max_norm=20)
                 grad_scaler.step(optimizer)
                 grad_scaler.update()
 
