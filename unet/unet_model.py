@@ -4,33 +4,53 @@ from .unet_parts import *
 
 
 class UNet(nn.Module):
-    def __init__(self, n_channels, n_classes, bilinear=False):
+    def __init__(self, n_channels, n_classes, n_piles=5, n_init_feature_channels=64, bilinear=False):
         super(UNet, self).__init__()
         self.n_channels = n_channels
         self.n_classes = n_classes
+        self.n_piles = n_piles
+        self.n_init_feature_channels = n_init_feature_channels
         self.bilinear = bilinear
 
-        self.inc = DoubleConv(n_channels, 64)
-        self.down1 = Down(64, 128)
-        self.down2 = Down(128, 256)
-        self.down3 = Down(256, 512)
-        factor = 2 if bilinear else 1
-        self.down4 = Down(512, 1024 // factor)
-        self.up1 = Up(1024, 512 // factor, bilinear)
-        self.up2 = Up(512, 256 // factor, bilinear)
-        self.up3 = Up(256, 128 // factor, bilinear)
-        self.up4 = Up(128, 64, bilinear)
-        self.outc = OutConv(64, n_classes)
+        # self.inc = DoubleConv(n_channels, 64)
+        # self.down1 = Down(64, 128)
+        # self.down2 = Down(128, 256)
+        # self.down3 = Down(256, 512)
+        # factor = 2 if bilinear else 1
+        # self.down4 = Down(512, 1024 // factor)
+        # self.up1 = Up(1024, 512 // factor, bilinear)
+        # self.up2 = Up(512, 256 // factor, bilinear)
+        # self.up3 = Up(256, 128 // factor, bilinear)
+        # self.up4 = Up(128, 64, bilinear)
+        # self.outc = OutConv(64, n_classes)
+
+        self.inc = DoubleConv(n_channels, n_init_feature_channels)
+        self.downs = [Down(n_init_feature_channels * (2 ** i),
+                      n_init_feature_channels * (2 ** (i + 1))) for i in range(n_piles - 1)]
+        self.downs = nn.Sequential(*self.downs)
+        self.ups = [Up(n_init_feature_channels * (2 ** (i + 1)),
+                    n_init_feature_channels * (2 ** i)) for i in range(n_piles - 2, -1, -1)]
+        self.ups = nn.Sequential(*self.ups)
+        self.outc = OutConv(n_init_feature_channels, n_classes)
+        pass
 
     def forward(self, x):
-        x1 = self.inc(x)
-        x2 = self.down1(x1)
-        x3 = self.down2(x2)
-        x4 = self.down3(x3)
-        x5 = self.down4(x4)
-        x = self.up1(x5, x4)
-        x = self.up2(x, x3)
-        x = self.up3(x, x2)
-        x = self.up4(x, x1)
+        # x1 = self.inc(x)
+        # x2 = self.down1(x1)
+        # x3 = self.down2(x2)
+        # x4 = self.down3(x3)
+        # x5 = self.down4(x4)
+        # x = self.up1(x5, x4)
+        # x = self.up2(x, x3)
+        # x = self.up3(x, x2)
+        # x = self.up4(x, x1)
+
+        xs = [self.inc(x)]
+        for i in range(self.n_piles - 1):
+            xs.append(self.downs[i](xs[i]))
+        x = self.ups[0](xs[-1], xs[-2])
+        for i in range(1, self.n_piles - 1):
+            x = self.ups[i](x, xs[self.n_piles - i - 2])
+
         logits = self.outc(x)
         return logits

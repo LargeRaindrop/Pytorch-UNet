@@ -210,6 +210,9 @@ def get_args():
     parser.add_argument('--data_aug', '-da', action='store_true', default=False, help='Use data augmentation')
     parser.add_argument('--loss_func', '-lf', type=str, default='sum',
                         help='Loss function: "ce" for cross entropy, "dice" for DSC, "sum" for sum')
+    parser.add_argument('--piles', '-p', type=int, default=5, help='Number of network piles')
+    parser.add_argument('--init_feature_channels', '-fd', type=int, default=64,
+                        help="Number of feature's channels in the first layer")
 
     return parser.parse_args()
 
@@ -224,13 +227,17 @@ if __name__ == '__main__':
     # Change here to adapt to your data
     # n_channels=3 for RGB images
     # n_classes is the number of probabilities you want to get per pixel
-    net = UNet(n_channels=1, n_classes=4, bilinear=args.bilinear)
-    # print(net)
+    net = UNet(n_channels=1, n_classes=4, n_piles=args.piles, n_init_feature_channels=args.init_feature_channels,
+               bilinear=args.bilinear)
 
     logging.info(f'Network:\n'
                  f'\t{net.n_channels} input channels\n'
                  f'\t{net.n_classes} output channels (classes)\n'
-                 f'\t{"Bilinear" if net.bilinear else "Transposed conv"} upscaling')
+                 f'\t{net.n_piles} piles\n'
+                 f'\t{net.n_init_feature_channels} channels for feature in the first layer\n'
+                 f'\t{sum(p.numel() for p in net.parameters())} parameters\n'
+                 f'\t{"Bilinear" if net.bilinear else "Transposed conv"} upscaling\n\n'
+                 f'{net}')
 
     if args.load:
         net.load_state_dict(torch.load(args.load, map_location=device))
