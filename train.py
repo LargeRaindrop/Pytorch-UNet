@@ -211,7 +211,7 @@ def get_args():
     parser.add_argument('--loss_func', '-lf', type=str, default='sum',
                         help='Loss function: "ce" for cross entropy, "dice" for DSC, "sum" for sum')
     parser.add_argument('--piles', '-p', type=int, default=5, help='Number of network piles')
-    parser.add_argument('--init_feature_channels', '-fd', type=int, default=64,
+    parser.add_argument('--init_feature_channels', '-ifc', type=int, default=64,
                         help="Number of feature's channels in the first layer")
 
     return parser.parse_args()
