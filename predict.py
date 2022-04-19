@@ -33,11 +33,12 @@ def predict_img(net,
         else:
             probs = torch.sigmoid(output)[0]
 
-        tf = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize((full_img.size[1], full_img.size[0])),
-            transforms.ToTensor()
-        ])
+        # tf = transforms.Compose([
+        #     transforms.ToPILImage(),
+        #     transforms.Resize((full_img.size[1], full_img.size[0])),
+        #     transforms.ToTensor()
+        # ])
+        tf = transforms.Resize((full_img.size[1], full_img.size[0]))
 
         full_mask = tf(probs.cpu()).squeeze()
 
@@ -62,6 +63,9 @@ def get_args():
                         help='Scale factor for the input images')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
     parser.add_argument('--size', '-z', type=int, default=512, help='Length side of images')
+    parser.add_argument('--piles', '-p', type=int, default=5, help='Number of network piles')
+    parser.add_argument('--init_feature_channels', '-ifc', type=int, default=64,
+                        help="Number of feature's channels in the first layer")
 
     return parser.parse_args()
 
@@ -89,7 +93,8 @@ if __name__ == '__main__':
     in_files = args.input
     out_files = get_output_filenames(args)
 
-    net = UNet(n_channels=1, n_classes=4, bilinear=args.bilinear)
+    net = UNet(n_channels=1, n_classes=4, n_piles=args.piles, n_init_feature_channels=args.init_feature_channels,
+               bilinear=args.bilinear)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Loading model {args.model}')
