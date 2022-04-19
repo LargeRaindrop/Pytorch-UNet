@@ -4,3 +4,4 @@ venv/
 checkpoints/*
 wandb/*
 /INTERRUPTED.pth
+/tmp/
