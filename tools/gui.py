@@ -27,7 +27,7 @@ def run():
 
 if __name__ == '__main__':
     root = tk.Tk()
-    root.title('Predict')
+    root.title('基于深度学习的磁共振医学图像分割辅助标注算法展示')
     # root.geometry('500x300')
     frame1 = tk.Frame(root)
     frame2 = tk.Frame(root)
