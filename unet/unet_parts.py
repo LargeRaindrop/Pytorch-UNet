@@ -22,7 +22,10 @@ class DoubleConv(nn.Module):
         )
 
     def forward(self, x):
-        return self.double_conv(x)
+        # return self.double_conv(x)
+
+        out = self.double_conv(x)
+        return x + out
 
 
 class Down(nn.Module):
