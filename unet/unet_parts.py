@@ -21,28 +21,32 @@ class DoubleConv(nn.Module):
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True)
         )
-        # self.conv1 = nn.Sequential(
-        #     nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1, bias=False),
-        #     nn.BatchNorm2d(mid_channels),
-        #     nn.ReLU(inplace=True)
-        # )
-        # self.conv2 = nn.Sequential(
-        #     nn.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1, bias=False),
-        #     nn.BatchNorm2d(out_channels),
-        #     nn.ReLU(inplace=True)
-        # )
-        self.conv3 = nn.Conv2d(in_channels, out_channels, kernel_size=1)
 
     def forward(self, x):
-        # return self.double_conv(x)
+        return self.double_conv(x)
 
-        # x = self.conv1(x)
-        # out = self.conv2(x)
-        # return x + out
 
-        x1 = self.double_conv(x)
-        x2 = self.conv3(x)
-        return x1 + x2
+class ResDoubleConv(nn.Module):
+    def __init__(self, in_channels, out_channels, mid_channels=None):
+        super().__init__()
+        if not mid_channels:
+            mid_channels = out_channels
+
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(mid_channels),
+            nn.ReLU(inplace=True)
+        )
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, x):
+        x = self.conv1(x)
+        y = self.conv2(x)
+        return x + y
 
 
 class Down(nn.Module):
@@ -52,7 +56,8 @@ class Down(nn.Module):
         super().__init__()
         self.maxpool_conv = nn.Sequential(
             nn.MaxPool2d(2),
-            DoubleConv(in_channels, out_channels)
+            # DoubleConv(in_channels, out_channels)
+            ResDoubleConv(in_channels, out_channels)
         )
 
     def forward(self, x):

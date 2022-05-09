@@ -24,7 +24,8 @@ class UNet(nn.Module):
         # self.up4 = Up(128, 64, bilinear)
         # self.outc = OutConv(64, n_classes)
 
-        self.inc = DoubleConv(n_channels, n_init_feature_channels)
+        # self.inc = DoubleConv(n_channels, n_init_feature_channels)
+        self.inc = ResDoubleConv(n_channels, n_init_feature_channels)
         self.downs = [Down(n_init_feature_channels * (2 ** i),
                       n_init_feature_channels * (2 ** (i + 1))) for i in range(n_piles - 1)]
         self.downs = nn.Sequential(*self.downs)
