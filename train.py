@@ -56,10 +56,11 @@ def train_net(name,
                           os.path.join(dir_train, 'masks'),
                           (args.size, args.size),
                           img_scale)
-    val_set = MyDataset(os.path.join(dir_test, 'imgs'),
-                        os.path.join(dir_test, 'masks'),
-                        (args.size, args.size),
-                        img_scale)
+    # val_set = MyDataset(os.path.join(dir_test, 'imgs'),
+    #                     os.path.join(dir_test, 'masks'),
+    #                     (args.size, args.size),
+    #                     img_scale)
+    val_set = train_set
     n_train = len(train_set)
     n_val = len(val_set)
 
